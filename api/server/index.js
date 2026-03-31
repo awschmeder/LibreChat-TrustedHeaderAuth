@@ -134,6 +134,24 @@ const startServer = async () => {
     await configureSocialLogins(app);
   }
 
+  /* Trusted Header Auth -- authenticates via proxy-injected identity headers */
+  if (isEnabled(process.env.TRUSTED_HEADER_AUTH_ENABLED)) {
+    const { createTrustedHeaderAuthMiddleware, getBalanceConfig } = require('@librechat/api');
+    const { findUser, createUser, updateUser, getUserById, deleteSession } = require('~/models');
+    const { setAuthTokens } = require('~/server/services/AuthService');
+    app.use(createTrustedHeaderAuthMiddleware({
+      findUser,
+      createUser,
+      updateUser,
+      getUserById,
+      deleteSession,
+      setAuthTokens,
+      getAppConfig,
+      isEnabled,
+      getBalanceConfig,
+    }));
+  }
+
   /* Per-request capability cache — must be registered before any route that calls hasCapability */
   app.use(capabilityContextMiddleware);
 
